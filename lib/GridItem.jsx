@@ -551,12 +551,18 @@ export default class GridItem extends React.Component<Props, State> {
    * @param  {Event}  e             event data
    * @param  {Object} callbackData  an object with node and size information
    */
-  onResizeStop: GridItemResizeCallback = (e, callbackData, position) =>
+  onResizeStop: GridItemResizeCallback = (e, callbackData, position) => {
+    this.setState({resizing: false});
+    console.log('onresizestop')
+    this.resizePosition = { top: 0, left: 0, width: 0, height: 0 };
     this.onResizeHandler(e, callbackData, position, "onResizeStop");
+  }
 
   // onResizeStart event handler
-  onResizeStart: GridItemResizeCallback = (e, callbackData, position) =>
+  onResizeStart: GridItemResizeCallback = (e, callbackData, position) => {
+    this.setState({resizing: true});
     this.onResizeHandler(e, callbackData, position, "onResizeStart");
+  }
 
   // onResize event handler
   onResize: GridItemResizeCallback = (e, callbackData, position) =>
@@ -576,7 +582,7 @@ export default class GridItem extends React.Component<Props, State> {
     const { x, y, i, maxH, minH, containerWidth } = this.props;
     const { minW, maxW } = this.props;
 
-    // Clamping of dimensions based on resize direction
+    // Sizing and clamping of dimensions based on resize direction
     let updatedSize = size;
     if (node) {
       updatedSize = resizeItemInDirection(
@@ -585,10 +591,9 @@ export default class GridItem extends React.Component<Props, State> {
         size,
         containerWidth
       );
-      this.setState({
-        resizing: handlerName === "onResizeStop" ? null : updatedSize
-      });
     }
+    console.log(updatedSize, size)
+    this.resizePosition = updatedSize;
 
     // Get new XY based on pixel size
     let { w, h } = calcWH(
@@ -599,6 +604,7 @@ export default class GridItem extends React.Component<Props, State> {
       y,
       handle
     );
+    console.log({handlerName, w, h, size, updatedSize, resizing: this.state.resizing})
 
     // Min/max capping.
     // minW should be at least 1 (TODO propTypes validation?)
@@ -620,6 +626,7 @@ export default class GridItem extends React.Component<Props, State> {
       useCSSTransforms
     } = this.props;
 
+
     const pos = calcGridItemPosition(
       this.getPositionParams(),
       x,
@@ -629,7 +636,6 @@ export default class GridItem extends React.Component<Props, State> {
       this.state.dragging ? this.dragPosition : null,
       this.state.resizing ? this.resizePosition : null
     );
-    console.log(pos);
     const child = React.Children.only(this.props.children);
 
     // Create the child element. We clone the existing element but modify its className and style.
